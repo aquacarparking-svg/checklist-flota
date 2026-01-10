@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Checklist Vehículos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:15px; }
+    h1 { text-align:center; }
+    .card { background:#fff; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    label { display:block; margin-top:10px; font-weight:bold; }
+    input, select, textarea, button { width:100%; padding:8px; margin-top:5px; }
+    .check label { font-weight:normal; }
+    button { background:#007bff; color:#fff; border:none; border-radius:8px; font-size:16px; margin-top:15px; }
+  </style>
+</head>
+<body>
+
+<h1>Checklist de Vehículo</h1>
+
+<div class="card">
+  <label>Empleado</label>
+  <select id="empleado">
+    <option value="">Selecciona</option>
+    <option>Empleado 01</option>
+    <option>Empleado 02</option>
+    <option>Empleado 03</option>
+    <option>Empleado 04</option>
+    <option>Empleado 05</option>
+    <option>Empleado 06</option>
+    <option>Empleado 07</option>
+    <option>Empleado 08</option>
+    <option>Empleado 09</option>
+    <option>Empleado 10</option>
+    <option>Empleado 11</option>
+    <option>Empleado 12</option>
+    <option>Empleado 13</option>
+    <option>Empleado 14</option>
+    <option>Empleado 15</option>
+    <option>Empleado 16</option>
+    <option>Empleado 17</option>
+    <option>Empleado 18</option>
+    <option>Empleado 19</option>
+    <option>Empleado 20</option>
+  </select>
+
+  <label>Matrícula</label>
+  <input id="matricula" placeholder="1234ABC" />
+
+  <label>Kilómetros</label>
+  <input id="km" type="number" />
+
+  <label>Combustible</label>
+  <select id="fuel">
+    <option value="">Selecciona</option>
+    <option>Vacío</option>
+    <option>1/4</option>
+    <option>1/2</option>
+    <option>3/4</option>
+    <option>Lleno</option>
+  </select>
+</div>
+
+<div class="card check">
+  <label><input type="checkbox" id="c1"> Limpieza exterior OK</label>
+  <label><input type="checkbox" id="c2"> Limpieza interior OK</label>
+  <label><input type="checkbox" id="c3"> Neumáticos OK</label>
+  <label><input type="checkbox" id="c4"> Luces OK</label>
+</div>
+
+<div class="card">
+  <label>Observaciones</label>
+  <textarea id="obs"></textarea>
+
+  <label>Fotos de daños</label>
+  <input type="file" id="imgs" accept="image/*" multiple />
+</div>
+
+<div class="card">
+  <button onclick="enviar()">Guardar checklist</button>
+</div>
+
+<script>
+  const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbwcvsbKEr-ZHDGsV6kYQOutgC6eefRqk8_ZrrOx7fbSRiy-ZZHn7HfVRjCli4bdSh_j/exec";
+
+  function enviar() {
+    if (!ENDPOINT_URL.includes("https")) {
+      alert("Falta pegar el enlace del Apps Script");
+      return;
+    }
+
+    const data = {
+      empleado: empleado.value,
+      matricula: matricula.value,
+      km: km.value,
+      combustible: fuel.value,
+      observaciones: obs.value,
+      fecha: new Date().toISOString(),
+      checks: [
+        { item: "Limpieza exterior", ok: c1.checked },
+        { item: "Limpieza interior", ok: c2.checked },
+        { item: "Neumáticos", ok: c3.checked },
+        { item: "Luces", ok: c4.checked }
+      ],
+      images: []
+    };
+
+    const files = imgs.files;
+    const promises = [];
+
+    for (let f of files) {
+      promises.push(new Promise(res => {
+        const r = new FileReader();
+        r.onload = () => res({ name:f.name, type:f.type, dataUrl:r.result });
+        r.readAsDataURL(f);
+      }));
+    }
+
+    Promise.all(promises).then(imgs => {
+      data.images = imgs;
+      fetch(ENDPOINT_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+      .then(() => alert("Checklist enviado correctamente"))
+      .catch(() => alert("Error al enviar"));
+    });
+  }
+</script>
+
+</body>
+</html>
